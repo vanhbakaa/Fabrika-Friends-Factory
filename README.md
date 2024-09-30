@@ -32,7 +32,7 @@
 | **API_ID / API_HASH**      | Platform data from which to run the Telegram session (default - android)                                      |       
 | **REF_LINK**               | Put your ref link here (default: my ref link)                                                                 |
 | **SQUAD_ID**               | Squad id to join when start bot (default: my squad id)                                                        |
-| **AUTO_TASK=**             | Auto do tasks (default: True)                                                                                 |
+| **AUTO_TASK**             | Auto do tasks (default: True)                                                                                 |
 | **AUTO_TAP**               | Auto tap to earn point (default: True)                                                                        |
 | **AUTO_BOOST**             | Auto use full energy boost (default: True)                                                                    |
 | **TAP_COUNT**              | Random ammount of taps (default: [30, 75])                                                                    |
