@@ -25,7 +25,7 @@ from random import randint
 import urllib3
 from datetime import datetime, timezone
 
-def convert_to_unix(time_stamp):
+def convert_to_unix(time_stamp: str):
     dt_obj = datetime.strptime(time_stamp, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
     return dt_obj.timestamp()
 
@@ -304,6 +304,8 @@ class Tapper:
 
     def check_time(self, available_time):
         # print(f"{convert_to_unix(available_time)} | {time()}")
+        if available_time == 0:
+            return True
         if convert_to_unix(available_time) < time() - 3600:
             return True
         else:
