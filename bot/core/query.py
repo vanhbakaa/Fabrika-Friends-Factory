@@ -230,6 +230,8 @@ class Tapper:
 
     def check_time(self, available_time):
         # print(f"{convert_to_unix(available_time)} | {time()}")
+        if available_time == 0:
+            return True
         if convert_to_unix(available_time) < time() - 3600:
             return True
         else:
