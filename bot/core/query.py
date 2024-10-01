@@ -341,12 +341,11 @@ class Tapper:
                 if time() - access_token_created_time >= token_live_time:
                     tg_web_data = self.query
                     self.auth_token = tg_web_data
-                    self.logged = self.login(session)
                     access_token_created_time = time()
                     token_live_time = randint(3400, 3600)
 
                 # print(self.logged)
-                if self.logged:
+                if self.login(session):
                     await self.get_user_info(session)
                     self.balance = int(self.user_data['score']['balance'])
                     self.enery = self.user_data['energy']['balance']
