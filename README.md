@@ -11,7 +11,7 @@
 
 
 
-# 🔥🔥 Use PYTHON 3.10 - 3.11.5 🔥🔥
+# 🔥🔥 Use PYTHON 3.11.5 🔥🔥
 
 ## Features  
 | Feature                                                     | Supported  |
@@ -51,7 +51,7 @@ To install libraries and run bot - open run.bat on Windows
 
 ## Prerequisites
 Before you begin, make sure you have the following installed:
-- [Python](https://www.python.org/downloads/) **IMPORTANT**: Make sure to use **Python 3.10 - 3.11.5**. 
+- [Python](https://www.python.org/downloads/) **IMPORTANT**: Make sure to use **3.11.5**. 
 
 ## Obtaining API Keys
 1. Go to my.telegram.org and log in using your phone number.
