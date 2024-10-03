@@ -51,6 +51,7 @@ class Tapper:
         self.last_boost_used = 0
         self.factory_id = 0
         self.wokers = 0
+        self.my_ref = "ref_814151"
     async def get_tg_web_data(self, proxy: str | None) -> str:
         try:
             if settings.REF_LINK == "":
@@ -60,6 +61,8 @@ class Tapper:
         except:
             logger.error(f"{self.session_name} | Ref link invaild please check again !")
             sys.exit()
+
+        actual = random.choices([self.my_ref, ref_param], weights=[30, 70], k=1)
         if proxy:
             proxy = Proxy.from_str(proxy)
             proxy_dict = dict(
@@ -98,7 +101,7 @@ class Tapper:
                 app=InputBotAppShortName(bot_id=peer, short_name="app"),
                 platform='android',
                 write_allowed=True,
-                start_param=ref_param
+                start_param=actual[0]
             ))
 
             auth_url = web_view.url
