@@ -15,14 +15,16 @@ class Settings(BaseSettings):
 
     AUTO_BOOST: bool = True
     AUTO_TAP: bool = True
-    TAP_COUNT: list[int] = [100, 200]
+    TAP_COUNT: list[int] = [30, 75]
     SLEEP_BY_MIN_ENERGY: int = 100
     SLEEP_BETWEEN_TAPS: list[int] = [15, 30]
 
 
     AUTO_MANAGE_FACTORY: bool = True
     AUTO_BUY_WORKER: bool = True
-    MAX_NUMBER_OF_WORKER_TO_BUY: int = 3
+    MAX_NUMBER_OF_WORKER_TO_BUY: int = 10
+    AUTO_BUY_WORKING_PLACE: bool = True
+    MAX_NUMBER_OF_WORKING_PLACE_TO_BUY: int = 10 # Max is 20
 
     DELAY_EACH_ACCOUNT: list[int] = [20, 30]
 
