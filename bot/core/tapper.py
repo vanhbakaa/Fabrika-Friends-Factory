@@ -160,7 +160,8 @@ class Tapper:
 
             res.raise_for_status()
         except:
-            logger.error(f"{self.session_name} | <red>Unknown error while trying to skip onboarding... {res.text}</red>")
+            print(res.text)
+            logger.error(f"{self.session_name} | <red>Unknown error while trying to skip onboarding... {res.status_code}</red>")
 
     async def get_user_info(self, session: requests.Session):
         res = session.get("https://api.ffabrika.com/api/v1/profile")
@@ -185,7 +186,8 @@ class Tapper:
             else:
                 self.user_data = user_data['data']
         else:
-            logger.warning(f"{self.session_name} | Can't get user info: {res.text}")
+            print(res.text)
+            logger.warning(f"{self.session_name} | Can't get user info: {res.status_code}")
 
     def join_squad(self, session: requests.Session):
         sid = settings.SQUAD_ID
@@ -193,7 +195,8 @@ class Tapper:
         if res.status_code == 204 or res.status_code == 401:
             return res.status_code
         else:
-            logger.warning(f"{self.session_name} | <yellow>Failed to join squad: {res.text}</yellow>")
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to join squad: {res.status_code}</yellow>")
 
     def do_task(self, session: requests.Session, task_id, task_des):
         res = session.post(f"https://api.ffabrika.com/api/v1/tasks/completion/{task_id}")
@@ -204,7 +207,8 @@ class Tapper:
             self.refresh_token(session)
             self.do_task(session, task_id, task_des)
         else:
-            logger.warning(f"{self.session_name} | <yellow>Failed to do task {task_des}: {res.text}</yellow>")
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to do task {task_des}: {res.status_code}</yellow>")
 
     def need_to_work(self, session: requests.Session):
         res = session.get(f"https://api.ffabrika.com/api/v1/factories/{self.factory_id}/workers?page=1")
@@ -256,7 +260,7 @@ class Tapper:
             self.refresh_token_ = res_data['refreshToken']['value']
             return True
         else:
-            print(response.json())
+            print(response.text)
             logger.warning(f"{self.session_name} | <red>Failed to login</red>")
             return False
 
@@ -269,7 +273,8 @@ class Tapper:
             self.refresh_token(session)
             self.fetch_tasks(session)
         else:
-            logger.warning(f"{self.session_name} | <yellow>Failed to fetch tasks: {res.text}</yellow>")
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to fetch tasks: {res.status_code}</yellow>")
             return []
 
     def tap(self, session: requests.Session, tap_count: int):
@@ -283,10 +288,11 @@ class Tapper:
             self.enery = data['energy']['balance']
             self.balance = data['score']['balance']
         elif res.status_code == 401:
-            self.refresh_token(session)
-            self.tap(session, tap_count)
+            return self.refresh_token(session)
+            # self.tap(session, tap_count)
         else:
-            logger.warning(f"{self.session_name} | <yellow>Failed to tap: {res.text}</yellow>")
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to tap: {res.status_code}</yellow>")
 
 
     def boost_energy(self, session: requests.Session):
@@ -299,10 +305,11 @@ class Tapper:
             self.last_boost_used = data['data']['lastRecoveryAt']
             return True
         elif res.status_code == 401:
-            self.refresh_token(session)
-            self.boost_energy(session)
+            return self.refresh_token(session)
+            # self.boost_energy(session)
         else:
-            logger.warning(f"{self.session_name} | <yellow>Failed to boost energy: {res.text}</yellow>")
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to boost energy: {res.status_code}</yellow>")
         return False
 
     def check_time(self, available_time):
@@ -322,14 +329,16 @@ class Tapper:
             self.refresh_token(session)
             self.get_factory_info(session)
         else:
-            logger.warning(f"{self.session_name} | <yellow>Failed to get factory info: {res.text}</yellow>")
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to get factory info: {res.status_code}</yellow>")
             return None
     def purchase(self, session: requests.Session, worker_id):
         res = session.post(f"https://api.ffabrika.com/api/v1/market/workers/{worker_id}/purchase")
         if res.status_code == 204:
             return True
         else:
-            logger.info(f"{self.session_name} | <yellow>Failed to purchase worker {worker_id}: {res.text}</yellow>")
+            print(res.text)
+            logger.info(f"{self.session_name} | <yellow>Failed to purchase worker {worker_id}: {res.status_code}</yellow>")
             return False
 
 
@@ -373,8 +382,12 @@ class Tapper:
         res = session.post(f"https://api.ffabrika.com/api/v1/factories/my/workers/tasks/assignment", json=payload)
         if res.status_code == 204:
             logger.success(f"{self.session_name} | <green>Successfully sent all worker to work!</green>")
+        elif res.status_code == 401:
+            return self.refresh_token(session)
         else:
-            logger.warning(f"{self.session_name} | <yellow>Failed to send worker to work: {res.text}</yellow>")
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to send worker to work: {res.status_code}</yellow>")
+
 
 
     def refresh_token(self, session: requests.Session):
@@ -389,7 +402,22 @@ class Tapper:
             self.refresh_token_ = data_['refreshToken']['value']
             logger.success(f"{self.session_name} | <green>Refresh token successfully !</green>")
         else:
-            logger.warning(f"{self.session_name} | <yellow>Failed to refresh token:</yellow> {res.text}")
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to refresh token:</yellow> {res.status_code}")
+
+    def buy_workplace(self, session: requests.Session):
+        payload = {
+            "quantity": 1
+        }
+        res = session.post("https://api.ffabrika.com/api/v1/tools/market/5/purchase", json=payload)
+        if res.status_code == 204:
+            logger.success(f"{self.session_name} | <green>Successfully bought a new workplace!</green>")
+            self.balance -= 60000
+        elif res.status_code == 401:
+            return self.refresh_token(session)
+        else:
+            print(res.text)
+            logger.warning(f"{self.session_name} | <yellow>Failed to buy workplace:</yellow> {res.status_code}")
     async def run(self, proxy: str | None) -> None:
         access_token_created_time = 0
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
@@ -457,7 +485,8 @@ Daily Reward:
                                 logger.success(f"{self.session_name} | <green>Claimed daily reward! | Balance: <light-blue>{res.json()['data']['balance']}</light-blue></green>")
                                 await asyncio.sleep(random.uniform(2,5))
                         else:
-                            logger.warning(f"{self.session_name} <yellow>Failed to claim daily reward: {res.text}</yellow>")
+                            print(res.text)
+                            logger.warning(f"{self.session_name} <yellow>Failed to claim daily reward: {res.status_code}</yellow>")
 
                     if squad == "No squad":
                         res_code = self.join_squad(session)
@@ -482,6 +511,9 @@ Daily Reward:
                     factory_info = self.get_factory_info(session)
                     if factory_info:
                         self.wokers = factory_info['totalWorkersCount']
+                        if settings.AUTO_BUY_WORKING_PLACE and factory_info['workingPlaceCount'] < settings.MAX_NUMBER_OF_WORKING_PLACE_TO_BUY and self.balance >= 60000:
+                            self.buy_workplace(session)
+
                         if factory_info['totalWorkersCount'] < settings.MAX_NUMBER_OF_WORKER_TO_BUY:
                             self.get_workers_data(session)
 
@@ -490,9 +522,6 @@ Daily Reward:
 
                         if self.need_to_work(session):
                             await self.send_worker_to_work(session)
-
-
-
 
                 if settings.AUTO_TAP:
                     i = randint(5, 15)
