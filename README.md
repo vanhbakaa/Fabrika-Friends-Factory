@@ -40,7 +40,9 @@
 | **SLEEP_BETWEEN_TAPS**     | Random sleep time between each taps (default: [15, 30])                                                       |
 | **AUTO_MANAGE_FACTORY**    | Auto manage factory (default: True)                                                                           |
 | **AUTO_BUY_WORKER**        | Auto Buy worker (default: True)                                                                               |
-| **MAX_NUMBER_OF_WORKER_TO_BUY**  | Max number of worker (without protection) to buy (default: 3)                                           |
+| **MAX_NUMBER_OF_WORKER_TO_BUY**        | Max number of worker to buy (default: 10)                                                                               |
+| **AUTO_BUY_WORKING_PLACE**  | Auto buy workplaces (default: True)                                           |
+| **MAX_NUMBER_OF_WORKING_PLACE_TO_BUY**  | Max workplaces to buy (default: 10 - Max is 20)                                           |
 | **USE_PROXY_FROM_FILE**    | Whether to use a proxy from the bot/config/proxies.txt file (True / False)                                    |
 
 
