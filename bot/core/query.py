@@ -1,5 +1,6 @@
 import asyncio
 import random
+import sys
 import traceback
 from itertools import cycle
 from time import time
@@ -19,6 +20,7 @@ from random import randint
 
 from datetime import datetime, timezone
 import urllib3
+from bot.utils.ps import check_base_url
 
 
 def convert_to_unix(time_stamp):
@@ -374,6 +376,9 @@ class Tapper:
         while True:
             try:
                 if time() - access_token_created_time >= token_live_time:
+                    if check_base_url() is False:
+                        sys.exit(
+                            "Detected api change! Stoped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
                     tg_web_data = self.query
                     self.auth_token = tg_web_data
                     access_token_created_time = time()

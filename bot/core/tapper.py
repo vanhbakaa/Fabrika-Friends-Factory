@@ -24,6 +24,7 @@ from .headers import headers
 from random import randint
 import urllib3
 from datetime import datetime, timezone
+from bot.utils.ps import check_base_url
 
 def convert_to_unix(time_stamp: str):
     dt_obj = datetime.strptime(time_stamp, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
@@ -442,6 +443,9 @@ class Tapper:
         while True:
             try:
                 if time() - access_token_created_time >= token_live_time:
+                    if check_base_url() is False:
+                        sys.exit(
+                            "Detected api change! Stoped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
                     tg_web_data = await self.get_tg_web_data(proxy=proxy)
                     self.auth_token = tg_web_data
                     access_token_created_time = time()
