@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     AUTO_BUY_WORKING_PLACE: bool = True
     MAX_NUMBER_OF_WORKING_PLACE_TO_BUY: int = 10 # Max is 20
 
+    ADVANCED_ANTI_DETECTION: bool = True
+
     DELAY_EACH_ACCOUNT: list[int] = [20, 30]
 
     USE_PROXY_FROM_FILE: bool = False
