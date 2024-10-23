@@ -375,10 +375,15 @@ class Tapper:
         token_live_time = randint(3400, 3600)
         while True:
             try:
-                if time() - access_token_created_time >= token_live_time:
-                    if check_base_url() is False:
+                if check_base_url() is False:
+                    if settings.ADVANCED_ANTI_DETECTION:
                         sys.exit(
-                            "Detected api change! Stoped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
+                            "Detected index js file change. Contact me to check if it's safe to continue: https://t.me/vanhbakaaa")
+                    else:
+                        sys.exit(
+                            "Detected api change! Stopped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
+
+                if time() - access_token_created_time >= token_live_time:
                     tg_web_data = self.query
                     self.auth_token = tg_web_data
                     access_token_created_time = time()
