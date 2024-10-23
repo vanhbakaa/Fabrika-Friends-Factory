@@ -45,6 +45,7 @@
 | **MAX_NUMBER_OF_WORKER_TO_BUY**        | Max number of worker to buy (default: 10)                                                                               |
 | **AUTO_BUY_WORKING_PLACE**  | Auto buy workplaces (default: True)                                           |
 | **MAX_NUMBER_OF_WORKING_PLACE_TO_BUY**  | Max workplaces to buy (default: 10 - Max is 20)                                           |
+| **ADVANCED_ANTI_DETECTION**  | Add more protection for your account (default: True)                                           |
 | **USE_PROXY_FROM_FILE**    | Whether to use a proxy from the bot/config/proxies.txt file (True / False)                                    |
 
 
