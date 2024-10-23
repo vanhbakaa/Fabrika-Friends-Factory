@@ -1,8 +1,11 @@
 import requests
 import re
 from bot.utils import logger
+from bot.config import settings
 
 baseUrl = "https://api.ffabrika.com/api/v1"
+
+pattern = r'i\s*=\s*""\.concat\("([^"]+)",\s*"[^\)]+"\)'
 
 def get_main_js_format(base_url):
     try:
@@ -25,11 +28,11 @@ def get_base_api(url):
         response = requests.get(url)
         response.raise_for_status()
         content = response.text
-        match = re.findall(r'"https:\/\/api\.[a-zA-Z0-9.-]+\/[a-zA-Z0-9\/]+"', content)
+        match = re.search(pattern, content)
 
         if match:
-            # print(match)
-            return [url.strip('"') for url in match]
+            # print(match.group(1))
+            return match.group(1)
         else:
             logger.info("Could not find 'baseUrl' in the content.")
             return None
@@ -43,13 +46,23 @@ def check_base_url():
     main_js_formats = get_main_js_format(base_url)
 
     if main_js_formats:
+        if settings.ADVANCED_ANTI_DETECTION:
+            r = requests.get(
+                "https://raw.githubusercontent.com/vanhbakaa/Fabrika-Friends-Factory/refs/heads/main/cgi")
+            js_ver = r.text.strip()
+            for js in main_js_formats:
+                if js_ver in js:
+                    logger.success(f"<green>No change in js file: {js_ver}</green>")
+                    return True
+            return False
+
         for format in main_js_formats:
             logger.info(f"Trying format: {format}")
 
             full_url = f"https://ffabrika.com{format}"
             result = get_base_api(full_url)
             # print(f"{result} | {baseUrl}")
-            if baseUrl in result:
+            if baseUrl == result:
                 logger.success("<green>No change in api!</green>")
                 return True
             return False
