@@ -441,122 +441,126 @@ class Tapper:
 
         token_live_time = randint(3400, 3600)
         while True:
+            can_run = True
             try:
                 if check_base_url() is False:
+                    can_run = False
                     if settings.ADVANCED_ANTI_DETECTION:
-                        sys.exit(
-                            "Detected index js file change. Contact me to check if it's safe to continue: https://t.me/vanhbakaaa")
+                        logger.warning(
+                            "<yellow>Detected index js file change. Contact me to check if it's safe to continue: https://t.me/vanhbakaaa</yellow>")
                     else:
-                        sys.exit(
-                            "Detected api change! Stopped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa")
+                        logger.warning(
+                            "<yellow>Detected api change! Stopped the bot for safety. Contact me here to update the bot: https://t.me/vanhbakaaa</yellow>")
 
-                if time() - access_token_created_time >= token_live_time:
-                    tg_web_data = await self.get_tg_web_data(proxy=proxy)
-                    self.auth_token = tg_web_data
-                    access_token_created_time = time()
-                    token_live_time = randint(3400, 3600)
+                if can_run:
 
-                # print(self.logged)
-                if self.login(session):
-                    await self.get_user_info(session)
-                    self.balance = int(self.user_data['score']['balance'])
-                    self.enery = self.user_data['energy']['balance']
-                    self.energy_boost = self.user_data['energy']['currentRecoveryLimit']
-                    self.last_boost_used = self.user_data['energy']['lastRecoveryAt'] if self.user_data['energy']['lastRecoveryAt'] else 0
-                    self.factory_id = self.user_data['factory']['id']
-
-                    if self.user_data['squad'] is None:
-                        squad = "No squad"
-                    else:
-                        squad = self.user_data['squad']['title']
-                    user_stats = f"""
-<light-blue>==={self.user_data['username']}===</light-blue>
-Status: <cyan>{self.user_data['status']}</cyan>
-Total Earned: <light-blue>{self.user_data['score']['total']}</light-blue>
-Balance: <light-blue>{self.user_data['score']['balance']}</light-blue>
-Squad: <red>{squad}</red>
-Daily Reward:
-    |
-    --Streak: <cyan>{self.user_data['dailyReward']['daysCount']}</cyan>
-    --Claimed: <red>{self.user_data['dailyReward']['isRewarded']}</red>
-                    """
-                    logger.info(f"{self.session_name} | User stats: \n{user_stats}")
-
-                    if self.user_data['dailyReward']['isRewarded'] is False:
-                        res = session.post("https://api.ffabrika.com/api/v1/daily-rewards/receiving")
-
-                        if res.status_code == 401:
-                            self.refresh_token(session)
-                            continue
-                        elif res.status_code == 204:
-                            res = session.get("https://api.ffabrika.com/api/v1/scores")
-                            if res.status_code == 200:
-                                logger.success(f"{self.session_name} | <green>Claimed daily reward! | Balance: <light-blue>{res.json()['data']['balance']}</light-blue></green>")
-                                await asyncio.sleep(random.uniform(2,5))
+                    if time() - access_token_created_time >= token_live_time:
+                        tg_web_data = await self.get_tg_web_data(proxy=proxy)
+                        self.auth_token = tg_web_data
+                        access_token_created_time = time()
+                        token_live_time = randint(3400, 3600)
+    
+                    # print(self.logged)
+                    if self.login(session):
+                        await self.get_user_info(session)
+                        self.balance = int(self.user_data['score']['balance'])
+                        self.enery = self.user_data['energy']['balance']
+                        self.energy_boost = self.user_data['energy']['currentRecoveryLimit']
+                        self.last_boost_used = self.user_data['energy']['lastRecoveryAt'] if self.user_data['energy']['lastRecoveryAt'] else 0
+                        self.factory_id = self.user_data['factory']['id']
+    
+                        if self.user_data['squad'] is None:
+                            squad = "No squad"
                         else:
-                            print(res.text)
-                            logger.warning(f"{self.session_name} <yellow>Failed to claim daily reward: {res.status_code}</yellow>")
-
-                    if squad == "No squad":
-                        res_code = self.join_squad(session)
-                        if res_code == 204:
-                            res = session.get(f"https://api.ffabrika.com/api/v1/squads/{settings.SQUAD_ID}")
-                            if res.status_code == 200:
-                                logger.success(f"{self.session_name} | <green>Joined squad: <cyan>{res.json()['data']['title']}</cyan></green>")
-
-                        elif res_code == 401:
-                            self.refresh_token(session)
-                            continue
-
-                    if settings.AUTO_TASK:
-                        task_list = self.fetch_tasks(session)
-                        # print(task_list)
-                        if task_list is not None:
-                            for task in task_list:
-                                if task['isCompleted'] is False:
-                                    self.do_task(session, task['id'], task['description'])
-
-                if settings.AUTO_MANAGE_FACTORY:
-                    factory_info = self.get_factory_info(session)
-                    if factory_info:
-                        self.wokers = factory_info['totalWorkersCount']
-                        if settings.AUTO_BUY_WORKING_PLACE and factory_info['workingPlaceCount'] < settings.MAX_NUMBER_OF_WORKING_PLACE_TO_BUY and self.balance >= 60000:
-                            self.buy_workplace(session)
-
-                        if factory_info['totalWorkersCount'] < settings.MAX_NUMBER_OF_WORKER_TO_BUY:
-                            self.get_workers_data(session)
-
-                        if factory_info['rewardCount'] > 0:
-                            self.collect_reward(session,factory_info['rewardCount'])
-
-                        if self.need_to_work(session):
-                            await self.send_worker_to_work(session)
-
-                if settings.AUTO_TAP:
-                    i = randint(5, 15)
-                    while i > 0:
-                        i -= 1
-                        tap_count = randint(settings.TAP_COUNT[0], settings.TAP_COUNT[1])
-                        if self.enery > settings.SLEEP_BY_MIN_ENERGY:
-                            tap_count = min(tap_count, self.enery)
-                            self.tap(session, tap_count)
-                            sleep_ = random.uniform(settings.SLEEP_BETWEEN_TAPS[0], settings.SLEEP_BETWEEN_TAPS[1])
-                            logger.info(f"{self.session_name} | sleep <red>{sleep_}s</red>")
-                            await asyncio.sleep(sleep_)
-                        else:
-                            if settings.AUTO_BOOST:
-                                if self.energy_boost > 1:
-                                    if self.check_time(self.last_boost_used):
-                                        self.boost_energy(session)
-                                        await asyncio.sleep(random.uniform(1, 3))
+                            squad = self.user_data['squad']['title']
+                        user_stats = f"""
+    <light-blue>==={self.user_data['username']}===</light-blue>
+    Status: <cyan>{self.user_data['status']}</cyan>
+    Total Earned: <light-blue>{self.user_data['score']['total']}</light-blue>
+    Balance: <light-blue>{self.user_data['score']['balance']}</light-blue>
+    Squad: <red>{squad}</red>
+    Daily Reward:
+        |
+        --Streak: <cyan>{self.user_data['dailyReward']['daysCount']}</cyan>
+        --Claimed: <red>{self.user_data['dailyReward']['isRewarded']}</red>
+                        """
+                        logger.info(f"{self.session_name} | User stats: \n{user_stats}")
+    
+                        if self.user_data['dailyReward']['isRewarded'] is False:
+                            res = session.post("https://api.ffabrika.com/api/v1/daily-rewards/receiving")
+    
+                            if res.status_code == 401:
+                                self.refresh_token(session)
+                                continue
+                            elif res.status_code == 204:
+                                res = session.get("https://api.ffabrika.com/api/v1/scores")
+                                if res.status_code == 200:
+                                    logger.success(f"{self.session_name} | <green>Claimed daily reward! | Balance: <light-blue>{res.json()['data']['balance']}</light-blue></green>")
+                                    await asyncio.sleep(random.uniform(2,5))
+                            else:
+                                print(res.text)
+                                logger.warning(f"{self.session_name} <yellow>Failed to claim daily reward: {res.status_code}</yellow>")
+    
+                        if squad == "No squad":
+                            res_code = self.join_squad(session)
+                            if res_code == 204:
+                                res = session.get(f"https://api.ffabrika.com/api/v1/squads/{settings.SQUAD_ID}")
+                                if res.status_code == 200:
+                                    logger.success(f"{self.session_name} | <green>Joined squad: <cyan>{res.json()['data']['title']}</cyan></green>")
+    
+                            elif res_code == 401:
+                                self.refresh_token(session)
+                                continue
+    
+                        if settings.AUTO_TASK:
+                            task_list = self.fetch_tasks(session)
+                            # print(task_list)
+                            if task_list is not None:
+                                for task in task_list:
+                                    if task['isCompleted'] is False:
+                                        self.do_task(session, task['id'], task['description'])
+    
+                    if settings.AUTO_MANAGE_FACTORY:
+                        factory_info = self.get_factory_info(session)
+                        if factory_info:
+                            self.wokers = factory_info['totalWorkersCount']
+                            if settings.AUTO_BUY_WORKING_PLACE and factory_info['workingPlaceCount'] < settings.MAX_NUMBER_OF_WORKING_PLACE_TO_BUY and self.balance >= 60000:
+                                self.buy_workplace(session)
+    
+                            if factory_info['totalWorkersCount'] < settings.MAX_NUMBER_OF_WORKER_TO_BUY:
+                                self.get_workers_data(session)
+    
+                            if factory_info['rewardCount'] > 0:
+                                self.collect_reward(session,factory_info['rewardCount'])
+    
+                            if self.need_to_work(session):
+                                await self.send_worker_to_work(session)
+    
+                    if settings.AUTO_TAP:
+                        i = randint(5, 15)
+                        while i > 0:
+                            i -= 1
+                            tap_count = randint(settings.TAP_COUNT[0], settings.TAP_COUNT[1])
+                            if self.enery > settings.SLEEP_BY_MIN_ENERGY:
+                                tap_count = min(tap_count, self.enery)
+                                self.tap(session, tap_count)
+                                sleep_ = random.uniform(settings.SLEEP_BETWEEN_TAPS[0], settings.SLEEP_BETWEEN_TAPS[1])
+                                logger.info(f"{self.session_name} | sleep <red>{sleep_}s</red>")
+                                await asyncio.sleep(sleep_)
+                            else:
+                                if settings.AUTO_BOOST:
+                                    if self.energy_boost > 1:
+                                        if self.check_time(self.last_boost_used):
+                                            self.boost_energy(session)
+                                            await asyncio.sleep(random.uniform(1, 3))
+                                        else:
+                                            logger.info(f"{self.session_name} | Not time to use boost!")
+                                            break
                                     else:
-                                        logger.info(f"{self.session_name} | Not time to use boost!")
+                                        logger.info(f"{self.session_name} | No energy boost left...")
                                         break
                                 else:
-                                    logger.info(f"{self.session_name} | No energy boost left...")
                                     break
-                            else:
-                                break
 
                 if self.multi_thread:
                     sleep_ = randint(500, 1000)
