@@ -1,4 +1,5 @@
 import asyncio
+import json
 import random
 import sys
 import traceback
@@ -9,13 +10,14 @@ from urllib.parse import unquote
 import aiohttp
 import requests
 from aiocfscrape import CloudflareScraper
+from aiofile import AIOFile
 from aiohttp_proxy import ProxyConnector
 from better_proxy import Proxy
 from pyrogram import Client
 from pyrogram.errors import Unauthorized, UserDeactivated, AuthKeyUnregistered, FloodWait
 from pyrogram.raw.types import InputBotAppShortName
 from pyrogram.raw.functions.messages import RequestAppWebView
-from bot.core.agents import generate_random_user_agent
+from bot.core.agents import generate_random_user_agent,fetch_version
 from bot.config import settings
 
 from bot.utils import logger
@@ -26,11 +28,14 @@ import urllib3
 from datetime import datetime, timezone
 from bot.utils.ps import check_base_url
 
+
 def convert_to_unix(time_stamp: str):
     dt_obj = datetime.strptime(time_stamp, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
     return dt_obj.timestamp()
 
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 class Tapper:
     def __init__(self, tg_client: Client, multi_thread: bool):
@@ -53,6 +58,7 @@ class Tapper:
         self.factory_id = 0
         self.wokers = 0
         self.my_ref = "ref_814151"
+
     async def get_tg_web_data(self, proxy: str | None) -> str:
         try:
             if settings.REF_LINK == "":
@@ -123,10 +129,9 @@ class Tapper:
                          f"{error}")
             await asyncio.sleep(delay=3)
 
-
     async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy):
         try:
-            response = await http_client.get(url='https://httpbin.org/ip', timeout=aiohttp.ClientTimeout(5),)
+            response = await http_client.get(url='https://httpbin.org/ip', timeout=aiohttp.ClientTimeout(5), )
             ip = (await response.json()).get('origin')
             logger.info(f"{self.session_name} | Proxy IP: {ip}")
             return True
@@ -161,8 +166,8 @@ class Tapper:
 
             res.raise_for_status()
         except:
-            print(res.text)
-            logger.error(f"{self.session_name} | <red>Unknown error while trying to skip onboarding... {res.status_code}</red>")
+            logger.error(
+                f"{self.session_name} | <red>Unknown error while trying to skip onboarding... {res.status_code}</red>")
 
     async def get_user_info(self, session: requests.Session):
         res = session.get("https://api.ffabrika.com/api/v1/profile")
@@ -183,7 +188,7 @@ class Tapper:
                         self.user_data = user_data['data']
                         break
                     attempt -= 1
-                    await asyncio.sleep(randint(1,3))
+                    await asyncio.sleep(randint(1, 3))
             else:
                 self.user_data = user_data['data']
         else:
@@ -203,7 +208,8 @@ class Tapper:
         res = session.post(f"https://api.ffabrika.com/api/v1/tasks/completion/{task_id}")
         if res.status_code == 201:
             data_ = res.json()['data']
-            logger.success(f"{self.session_name} | <green>Successfully completed task {task_des}</green> | Balance: <cyan>{data_['score']['balance']}</cyan>")
+            logger.success(
+                f"{self.session_name} | <green>Successfully completed task {task_des}</green> | Balance: <cyan>{data_['score']['balance']}</cyan>")
         elif res.status_code == 401:
             self.refresh_token(session)
             self.do_task(session, task_id, task_des)
@@ -219,7 +225,6 @@ class Tapper:
                 if worker['task'] is None:
                     return True
         return False
-
 
     def login(self, session: requests.Session):
 
@@ -285,7 +290,8 @@ class Tapper:
         res = session.post("https://api.ffabrika.com/api/v1/scores", json=payload)
         if res.status_code == 201:
             data = res.json()['data']
-            logger.success(f"{self.session_name} | <green>Successfully tapped <cyan>{tap_count}</cyan> times | Earned <cyan>{tap_count}</cyan> - Balance: <light-blue>{data['score']['balance']}</light-blue> | Energy left: <red>{data['energy']['balance']}</red></green>")
+            logger.success(
+                f"{self.session_name} | <green>Successfully tapped <cyan>{tap_count}</cyan> times | Earned <cyan>{tap_count}</cyan> - Balance: <light-blue>{data['score']['balance']}</light-blue> | Energy left: <red>{data['energy']['balance']}</red></green>")
             self.enery = data['energy']['balance']
             self.balance = data['score']['balance']
         elif res.status_code == 401:
@@ -294,7 +300,6 @@ class Tapper:
         else:
             print(res.text)
             logger.warning(f"{self.session_name} | <yellow>Failed to tap: {res.status_code}</yellow>")
-
 
     def boost_energy(self, session: requests.Session):
         res = session.post("https://api.ffabrika.com/api/v1/energies/recovery")
@@ -333,15 +338,16 @@ class Tapper:
             print(res.text)
             logger.warning(f"{self.session_name} | <yellow>Failed to get factory info: {res.status_code}</yellow>")
             return None
+
     def purchase(self, session: requests.Session, worker_id):
         res = session.post(f"https://api.ffabrika.com/api/v1/market/workers/{worker_id}/purchase")
         if res.status_code == 204:
             return True
         else:
             print(res.text)
-            logger.info(f"{self.session_name} | <yellow>Failed to purchase worker {worker_id}: {res.status_code}</yellow>")
+            logger.info(
+                f"{self.session_name} | <yellow>Failed to purchase worker {worker_id}: {res.status_code}</yellow>")
             return False
-
 
     def get_score(self, session):
         res = session.get("https://api.ffabrika.com/api/v1/scores")
@@ -355,6 +361,7 @@ class Tapper:
         if res.status_code == 200:
             data = res.json()['data']
             logger.info(f"{self.session_name} | Balance: <cyan>{data['score']['balance']}</cyan>")
+
     def get_workers_data(self, session: requests.Session):
         res = session.get("https://api.ffabrika.com/api/v1/market/workers?page=1&limit=20")
         if res.status_code == 200:
@@ -376,6 +383,7 @@ class Tapper:
         if res.status_code == 204:
             logger.success(f"{self.session_name} | <green>Successfully claimed <cyan>{value}</cyan></green>")
             self.get_user_info2(session)
+
     async def send_worker_to_work(self, session: requests.Session):
         payload = {
             "type": "fastest"
@@ -388,8 +396,6 @@ class Tapper:
         else:
             print(res.text)
             logger.warning(f"{self.session_name} | <yellow>Failed to send worker to work: {res.status_code}</yellow>")
-
-
 
     def refresh_token(self, session: requests.Session):
         headers['Cookie'] = f"ref_uid={self.refresh_token}"
@@ -419,11 +425,14 @@ class Tapper:
         else:
             print(res.text)
             logger.warning(f"{self.session_name} | <yellow>Failed to buy workplace:</yellow> {res.status_code}")
-    async def run(self, proxy: str | None) -> None:
+
+    async def run(self, proxy: str | None, ua: str) -> None:
         access_token_created_time = 0
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
-        headers["User-Agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
+        headers["User-Agent"] = ua
+        chrome_ver = fetch_version(headers['User-Agent'])
+        headers['Sec-Ch-Ua'] = f'"Chromium";v="{chrome_ver}", "Android WebView";v="{chrome_ver}", "Not.A/Brand";v="99"'
         http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
 
         session = requests.Session()
@@ -459,16 +468,17 @@ class Tapper:
                         self.auth_token = tg_web_data
                         access_token_created_time = time()
                         token_live_time = randint(3400, 3600)
-    
+
                     # print(self.logged)
                     if self.login(session):
                         await self.get_user_info(session)
                         self.balance = int(self.user_data['score']['balance'])
                         self.enery = self.user_data['energy']['balance']
                         self.energy_boost = self.user_data['energy']['currentRecoveryLimit']
-                        self.last_boost_used = self.user_data['energy']['lastRecoveryAt'] if self.user_data['energy']['lastRecoveryAt'] else 0
+                        self.last_boost_used = self.user_data['energy']['lastRecoveryAt'] if self.user_data['energy'][
+                            'lastRecoveryAt'] else 0
                         self.factory_id = self.user_data['factory']['id']
-    
+
                         if self.user_data['squad'] is None:
                             squad = "No squad"
                         else:
@@ -485,33 +495,36 @@ class Tapper:
         --Claimed: <red>{self.user_data['dailyReward']['isRewarded']}</red>
                         """
                         logger.info(f"{self.session_name} | User stats: \n{user_stats}")
-    
+
                         if self.user_data['dailyReward']['isRewarded'] is False:
                             res = session.post("https://api.ffabrika.com/api/v1/daily-rewards/receiving")
-    
+
                             if res.status_code == 401:
                                 self.refresh_token(session)
                                 continue
                             elif res.status_code == 204:
                                 res = session.get("https://api.ffabrika.com/api/v1/scores")
                                 if res.status_code == 200:
-                                    logger.success(f"{self.session_name} | <green>Claimed daily reward! | Balance: <light-blue>{res.json()['data']['balance']}</light-blue></green>")
-                                    await asyncio.sleep(random.uniform(2,5))
+                                    logger.success(
+                                        f"{self.session_name} | <green>Claimed daily reward! | Balance: <light-blue>{res.json()['data']['balance']}</light-blue></green>")
+                                    await asyncio.sleep(random.uniform(2, 5))
                             else:
                                 print(res.text)
-                                logger.warning(f"{self.session_name} <yellow>Failed to claim daily reward: {res.status_code}</yellow>")
-    
+                                logger.warning(
+                                    f"{self.session_name} <yellow>Failed to claim daily reward: {res.status_code}</yellow>")
+
                         if squad == "No squad":
                             res_code = self.join_squad(session)
                             if res_code == 204:
                                 res = session.get(f"https://api.ffabrika.com/api/v1/squads/{settings.SQUAD_ID}")
                                 if res.status_code == 200:
-                                    logger.success(f"{self.session_name} | <green>Joined squad: <cyan>{res.json()['data']['title']}</cyan></green>")
-    
+                                    logger.success(
+                                        f"{self.session_name} | <green>Joined squad: <cyan>{res.json()['data']['title']}</cyan></green>")
+
                             elif res_code == 401:
                                 self.refresh_token(session)
                                 continue
-    
+
                         if settings.AUTO_TASK:
                             task_list = self.fetch_tasks(session)
                             # print(task_list)
@@ -519,23 +532,24 @@ class Tapper:
                                 for task in task_list:
                                     if task['isCompleted'] is False:
                                         self.do_task(session, task['id'], task['description'])
-    
+
                     if settings.AUTO_MANAGE_FACTORY:
                         factory_info = self.get_factory_info(session)
                         if factory_info:
                             self.wokers = factory_info['totalWorkersCount']
-                            if settings.AUTO_BUY_WORKING_PLACE and factory_info['workingPlaceCount'] < settings.MAX_NUMBER_OF_WORKING_PLACE_TO_BUY and self.balance >= 60000:
+                            if settings.AUTO_BUY_WORKING_PLACE and factory_info[
+                                'workingPlaceCount'] < settings.MAX_NUMBER_OF_WORKING_PLACE_TO_BUY and self.balance >= 60000:
                                 self.buy_workplace(session)
-    
+
                             if factory_info['totalWorkersCount'] < settings.MAX_NUMBER_OF_WORKER_TO_BUY:
                                 self.get_workers_data(session)
-    
+
                             if factory_info['rewardCount'] > 0:
-                                self.collect_reward(session,factory_info['rewardCount'])
-    
+                                self.collect_reward(session, factory_info['rewardCount'])
+
                             if self.need_to_work(session):
                                 await self.send_worker_to_work(session)
-    
+
                     if settings.AUTO_TAP:
                         i = randint(5, 15)
                         while i > 0:
@@ -579,21 +593,40 @@ class Tapper:
                 logger.error(f"{self.session_name} | Unknown error: {error}")
                 await asyncio.sleep(delay=randint(60, 120))
 
-async def run_tapper(tg_client: Client, proxy: str | None):
+
+async def run_tapper(tg_client: Client, proxy: str | None, ua: str):
     try:
         sleep_ = randint(1, 15)
         logger.info(f"{tg_client.name} | start after {sleep_}s")
         # await asyncio.sleep(sleep_)
-        await Tapper(tg_client=tg_client, multi_thread=True).run(proxy=proxy)
+        await Tapper(tg_client=tg_client, multi_thread=True).run(proxy=proxy, ua=ua)
     except InvalidSession:
         logger.error(f"{tg_client.name} | Invalid Session")
 
+async def get_user_agent(session_name):
+    async with AIOFile('user_agents.json', 'r') as file:
+        content = await file.read()
+        user_agents = json.loads(content)
+
+    if session_name not in list(user_agents.keys()):
+        logger.info(f"{session_name} | Doesn't have user agent, Creating...")
+        ua = generate_random_user_agent(device_type='android', browser_type='chrome')
+        user_agents.update({session_name: ua})
+        async with AIOFile('user_agents.json', 'w') as file:
+            content = json.dumps(user_agents, indent=4)
+            await file.write(content)
+        return ua
+    else:
+        logger.info(f"{session_name} | Loading user agent from cache...")
+        return user_agents[session_name]
 async def run_tapper1(tg_clients: list[Client], proxies):
     proxies_cycle = cycle(proxies) if proxies else None
     while True:
         for tg_client in tg_clients:
             try:
-                await Tapper(tg_client=tg_client, multi_thread=False).run(next(proxies_cycle) if proxies_cycle else None)
+                await Tapper(tg_client=tg_client, multi_thread=False).run(
+                    next(proxies_cycle) if proxies_cycle else None,
+                    ua=await get_user_agent(tg_client.name))
             except InvalidSession:
                 logger.error(f"{tg_client.name} | Invalid Session")
 
