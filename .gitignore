@@ -1,3 +1,5 @@
 .env
 sessions
 data.txt
+user_agents.json
+__pycache__
