@@ -38,7 +38,7 @@ class Tapper:
     def __init__(self, query: str, multi_thread):
         self.query = query
         self.multi_thread = multi_thread
-        fetch_data = unquote(self.query).split("&user=")[1].split("&auth_date=")[0]
+        fetch_data = unquote(self.query).split("user=")[1].split("&auth_date=")[0]
         json_data = json.loads(fetch_data)
         self.session_name = json_data['username']
         self.first_name = ''
@@ -531,7 +531,7 @@ async def run_query_tapper(query: str, proxy: str | None, ua: str):
 
 def fetch_username(query):
     try:
-        fetch_data = unquote(query).split("&user=")[1].split("&auth_date=")[0]
+        fetch_data = unquote(query).split("user=")[1].split("&auth_date=")[0]
         json_data = json.loads(fetch_data)
         return json_data['username']
     except:
