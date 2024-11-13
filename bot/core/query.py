@@ -6,7 +6,7 @@ import traceback
 from itertools import cycle
 from time import time
 from urllib.parse import unquote
-
+import traceback
 import aiohttp
 import requests
 from aiocfscrape import CloudflareScraper
@@ -536,7 +536,7 @@ def fetch_username(query):
         return json_data['username']
     except:
         logger.warning(f"Invaild query: {query}")
-        sys.exit()
+        traceback.print_exc()
 
 
 async def get_user_agent(session_name):
