@@ -6,7 +6,7 @@ import argparse
 import sys
 from itertools import cycle
 from urllib.parse import unquote
-
+import traceback 
 from aiofile import AIOFile
 from pyrogram import Client
 from better_proxy import Proxy
@@ -46,7 +46,7 @@ def fetch_username(query):
         return json_data["username"]
     except:
         logger.warning(f"Invaild query: {query}")
-        sys.exit()
+        traceback.print_exc()
 
 
 async def get_user_agent(session_name):
