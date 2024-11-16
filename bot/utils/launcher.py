@@ -38,7 +38,6 @@ def get_session_names() -> list[str]:
 
     return session_names
 
-
 def fetch_username(query):
     try:
         fetch_data = unquote(query).split("user=")[1].split("&chat_instance=")[0]
@@ -50,8 +49,13 @@ def fetch_username(query):
             json_data = json.loads(fetch_data)
             return json_data['username']
         except:
-            logger.warning(f"Invaild query: {query}")
-            sys.exit()
+            try:
+                fetch_data = unquote(unquote(query)).split("user=")[1].split("&auth_date=")[0]
+                json_data = json.loads(fetch_data)
+                return json_data['username']
+            except:
+                logger.warning(f"Invaild query: {query}")
+                sys.exit()
 
 
 async def get_user_agent(session_name):
