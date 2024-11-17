@@ -558,7 +558,7 @@ def fetch_username(query):
                 return json_data['username']
             except:
                 logger.warning(f"Invaild query: {query}")
-                sys.exit()
+                return ""
 
 
 async def get_user_agent(session_name):
